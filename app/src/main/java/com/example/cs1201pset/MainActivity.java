@@ -95,9 +95,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        Thread thread = new Thread(
-
-        );
         analyse();
         sortWordPairs();
 
