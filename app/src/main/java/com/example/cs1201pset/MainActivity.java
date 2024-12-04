@@ -20,20 +20,20 @@ import java.io.*;
 import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
-    static TextView fileName;
-    static TextView wordCountLabel;
-    static TextView wordCountNum;
-    static TextView sentCountLabel;
-    static TextView sentCountNum;
-    static TextView uniqueWordsLabel;
-    static TextView uniqueWordsNum;
-    static TextView uniqueWordsList;
-    static TextView top5Label;
-    static ListView top5List;
-    static TextView wordPairLabel;
-    static ListView wordPairList;
-    static ScrollView parent;
-    static ScrollView child;
+    TextView fileName;
+    TextView wordCountLabel;
+    TextView wordCountNum;
+    TextView sentCountLabel;
+    TextView sentCountNum;
+    TextView uniqueWordsLabel;
+    TextView uniqueWordsNum;
+    TextView uniqueWordsList;
+    TextView top5Label;
+    ListView top5List;
+    TextView wordPairLabel;
+    ListView wordPairList;
+    ScrollView parent;
+    ScrollView child;
     static int wordCount;
     static int sentenceCount;
     static int uniqueCount;
@@ -69,11 +69,11 @@ public class MainActivity extends AppCompatActivity {
         if (StartingScreen.getFileName().endsWith("pdf")) {
             // https://www.geeksforgeeks.org/how-to-extract-data-from-pdf-file-in-android/
             try {
-                PdfReader reader = new PdfReader(StartingScreen.getFileName());
+                PdfReader reader = new PdfReader(assets.open(StartingScreen.getFileName()));
                 int n = reader.getNumberOfPages();
 
                 for (int i = 0; i < n; i++) {
-                    messyTxt.add(PdfTextExtractor.getTextFromPage(reader, i+1).trim() + "\n");
+                    messyTxt.add(PdfTextExtractor.getTextFromPage(reader, i + 1).trim() + "\n");
                 }
 
                 reader.close();
@@ -90,24 +90,16 @@ public class MainActivity extends AppCompatActivity {
                     messyTxt.add(line);
                 }
 
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-//        analyse();
-//        sortWordPairs();
+        Thread thread = new Thread(
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                analyse();
-                sortWordPairs();
-            }
-        };
-
-        thread.start();
+        );
+        analyse();
+        sortWordPairs();
 
         // initialising all components
         fileName = findViewById(R.id.fileName);
@@ -116,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         parent = findViewById(R.id.parent);
         child = findViewById(R.id.child);
 
+        // https://stackoverflow.com/questions/52139495/nestedscrollview-inside-nestedscrollview-not-scrolling
         parent.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
                 Log.v("PARENT", "PARENT TOUCH");
@@ -127,8 +120,7 @@ public class MainActivity extends AppCompatActivity {
         child.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
                 Log.v("CHILD", "CHILD TOUCH");
-                // Disallow the touch request for parent scroll on touch of
-                // child view
+                // Disallow the touch request for parent scroll on touch of child view
                 v.getParent().requestDisallowInterceptTouchEvent(true);
                 return false;
             }
@@ -150,9 +142,10 @@ public class MainActivity extends AppCompatActivity {
 
         // unique words list view
         unique = "";
-        for (int i = 0 ; i < frequencies.size(); i++) {
-            if (frequencies.get(i) != 1) break;       // only including words that appear once in the file
-            else unique += (i+1) + ". " + words.get(i) + "\n\n";
+        for (int i = 0; i < frequencies.size(); i++) {
+            if (frequencies.get(i) != 1)
+                break;       // only including words that appear once in the file
+            else unique += (i + 1) + ". " + words.get(i) + "\n\n";
         }
         uniqueWordsList = findViewById(R.id.uniqueWordsList);
         uniqueWordsList.setText(unique);
@@ -162,26 +155,31 @@ public class MainActivity extends AppCompatActivity {
         String[] mostCommon5 = new String[5];
 
         int x = 0;
-        for (int i = words.size()-1; i > words.size()-6; i--) {
-            mostCommon5[x] = (x+1) + ". " + words.get(i) + "     [" + frequencies.get(i) + " occurrences.]";
+        for (int i = words.size() - 1; i > words.size() - 6; i--) {
+            mostCommon5[x] = (x + 1) + ". " + words.get(i) + "     [" + frequencies.get(i) + " occurrences.]";
             x++;
+
+            if (x == 5) break;
         }
         ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mostCommon5);
         top5List.setAdapter(adapter2);
 
         // word pair list view
-        x = 0;
+        int x2 = 0;
         wordPairList = findViewById(R.id.wordPairList);
         String[] wordPair5 = new String[5];
-        for (int i = wordPairs.size()-1; i > wordPairs.size()-6; i--) {
-            String temp = Arrays.toString(wordPairs.get(i)).substring(1,Arrays.toString(wordPairs.get(i)).length()-1);
-            wordPair5[x] = (x+1) + ". " + temp + "     [" + pairFreq.get(i) + " occurrences.]";
-            x++;
+        for (int i = wordPairs.size() - 1; i > wordPairs.size() - 6; i--) {
+            String temp = Arrays.toString(wordPairs.get(i)).substring(1, Arrays.toString(wordPairs.get(i)).length() - 1);
+            wordPair5[x2] = (x2 + 1) + ". " + temp + "     [" + pairFreq.get(i) + " occurrences.]";
+            x2++;
+
+            if (x2 == 5) break;
         }
 
         ArrayAdapter<String> adapter3 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, wordPair5);
         wordPairList.setAdapter(adapter3);
     }
+
 
     private void analyse() {
         // turning messy text (each item is a line) into text array (each item is a word)
@@ -190,13 +188,23 @@ public class MainActivity extends AppCompatActivity {
             line = messyTxt.get(j);
             sentenceCount += countSentences(line);
 
+            // https://docs.oracle.com/javase/tutorial/essential/regex/quant.html
+            line = line.replaceAll("-{2,}", " ");
+            line = line.replaceAll("—", " ");
             line = line.replaceAll("[^\\w\\s'-]", "").toLowerCase();
 
             String[] temp = line.split("\\s+");
             for (int i = 0; i < temp.length; i++) {
                 // credit: https://www.baeldung.com/java-string-number-presence
-                if (temp[i].isEmpty() || temp[i].matches(".*\\d.*")) continue;
+                if (temp[i].isEmpty() || temp[i].matches(".*\\d.*"))
+                    continue;    // skip over numerical values and whitespace
                 if (temp[i].equals("i")) temp[i] = "I";
+                if (temp[i].contains("'")) {      // removing apostrophes if they're used as quotations
+                    if (temp[i].startsWith("'")) temp[i] = temp[i].substring(1);
+                    if (temp[i].endsWith("'") && temp[i].charAt(temp[i].length() - 2) != 's') {
+                        temp[i] = temp[i].substring(0, temp[i].length() - 1);
+                    }
+                }
 
                 text.add(temp[i]);
             }
@@ -240,15 +248,15 @@ public class MainActivity extends AppCompatActivity {
 
         // sort parallel arrays
         for (int i = 0; i < frequencies.size(); i++) {
-            for (int j = 0; j < frequencies.size()-1; j++) {
-                if (frequencies.get(j) > frequencies.get(j+1)) {
+            for (int j = 0; j < frequencies.size() - 1; j++) {
+                if (frequencies.get(j) > frequencies.get(j + 1)) {
                     int temp = frequencies.get(j);
-                    frequencies.set(j, frequencies.get(j+1));
-                    frequencies.set(j+1, temp);
+                    frequencies.set(j, frequencies.get(j + 1));
+                    frequencies.set(j + 1, temp);
 
                     String temp2 = words.get(j);
-                    words.set(j, words.get(j+1));
-                    words.set(j+1, temp2);
+                    words.set(j, words.get(j + 1));
+                    words.set(j + 1, temp2);
                 }
             }
         }
@@ -258,33 +266,33 @@ public class MainActivity extends AppCompatActivity {
 
     private void sortWordPairs() {
         // populating array
-        for (int i = 0; i < text.size()-1; i++) {
-            String[] pair = {text.get(i), text.get(i+1)};
+        for (int i = 0; i < text.size() - 1; i++) {
+            String[] pair = {text.get(i), text.get(i + 1)};
             int index = findIndex(wordPairs, pair);
 
             if (index == -1) {     // new word pair
                 wordPairs.add(pair);
                 pairFreq.add(1);
-            } else pairFreq.set(index, pairFreq.get(index)+1);      // add 1 to frequency for existing pair
+            } else
+                pairFreq.set(index, pairFreq.get(index) + 1);      // add 1 to frequency for existing pair
         }
 
         // sorting parallel arrays
         for (int i = 0; i < wordPairs.size(); i++) {
-            for (int j = 0; j < wordPairs.size()-1; j++) {
-                if (pairFreq.get(j) > pairFreq.get(j+1)) {
+            for (int j = 0; j < wordPairs.size() - 1; j++) {
+                if (pairFreq.get(j) > pairFreq.get(j + 1)) {
                     int temp = pairFreq.get(j);
-                    pairFreq.set(j, pairFreq.get(j+1));
-                    pairFreq.set(j+1, temp);
+                    pairFreq.set(j, pairFreq.get(j + 1));
+                    pairFreq.set(j + 1, temp);
 
                     String[] temp2 = wordPairs.get(j);
-                    wordPairs.set(j, wordPairs.get(j+1));
-                    wordPairs.set(j+1, temp2);
+                    wordPairs.set(j, wordPairs.get(j + 1));
+                    wordPairs.set(j + 1, temp2);
                 }
             }
         }
     }
 
-    // helper methods
     private int findIndex(ArrayList<String[]> wordPairs, String[] pair) {
         for (int i = 0; i < wordPairs.size(); i++) {
             if (Arrays.equals(wordPairs.get(i), pair)) return i;
@@ -313,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // checking for consecutive punctuation (eg. ?!)
-                while (i + 1 < str.length() && (str.charAt(i+1) == '!' || str.charAt(i+1) == '?' || str.charAt(i+1) == '.')) {
+                while (i + 1 < str.length() && (str.charAt(i + 1) == '!' || str.charAt(i + 1) == '?' || str.charAt(i + 1) == '.')) {
                     i++;  // skipping to next char
                 }
             } else if (!Character.isWhitespace(str.charAt(i))) sentence = true;
@@ -323,4 +331,5 @@ public class MainActivity extends AppCompatActivity {
 
         return cnt;
     }
+
 }

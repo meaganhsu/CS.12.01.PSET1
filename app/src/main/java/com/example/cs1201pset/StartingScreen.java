@@ -8,8 +8,7 @@ import android.widget.*;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.*;
 
 import java.util.*;
 
@@ -50,7 +49,7 @@ public class StartingScreen extends AppCompatActivity {
         });
 
         // creating spinner: www.youtube.com/watch?v=4ogzfAipGS8
-        ArrayList<String> files = new ArrayList(Arrays.asList(new String[] {"1984.txt", "AnimalFarm.txt", "Lottery.pdf", "textOne.txt", "textTwo.txt"}));
+        ArrayList<String> files = new ArrayList(Arrays.asList(new String[] {"1984.txt", "AnimalFarm.txt", "Lottery.pdf", "TextOne.txt", "TextTwo.txt", "StoryOfAnHour.pdf"}));
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, files);
         adapter.setDropDownViewResource(android.R.layout.select_dialog_singlechoice);
         dropdown.setAdapter(adapter);
