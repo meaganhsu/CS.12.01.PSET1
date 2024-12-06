@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
         // populating array
         for (int i = 0; i < text.size() - 1; i++) {
             String[] pair = {text.get(i), text.get(i + 1)};
-            int index = findIndex(wordPairs, pair);
+            int index = findIndex(pair);
 
             if (index == -1) {     // new word pair
                 wordPairs.add(pair);
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int findIndex(ArrayList<String[]> wordPairs, String[] pair) {
+    private int findIndex(String[] pair) {
         for (int i = 0; i < wordPairs.size(); i++) {
             if (Arrays.equals(wordPairs.get(i), pair)) return i;
         }
